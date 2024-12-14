@@ -1,1 +1,6 @@
-# Memepire\n\nA BSV-powered meme competition platform
+# My Project
+
+Description of your project goes here.
+
+## Installation
+
