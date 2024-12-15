@@ -344,22 +344,13 @@ if (document.readyState === 'loading') {
 }
 
 function initializeWalletFunctionality() {
-    console.log('Initializing wallet functionality');
-    const connectWalletBtn = document.getElementById('connectWalletBtn');
-    if (connectWalletBtn) {
-        console.log('Found connect wallet button');
-        connectWalletBtn.addEventListener('click', () => {
-            console.log('Connect wallet clicked');
-            const initialSetupModal = document.getElementById('initialSetupModal');
-            if (initialSetupModal) {
-                initialSetupModal.style.display = 'flex';
-            } else {
-                console.error('Initial setup modal not found');
-            }
-        });
-    } else {
-        console.error('Connect wallet button not found');
+    const walletButton = document.getElementById('walletButton');
+    if (!walletButton) {
+        console.log('Waiting for wallet components to load...');
+        return;
     }
+    console.log('Initializing wallet functionality...');
+    // Your wallet initialization code
 }
 
 // Initialize immediately for the connect button
