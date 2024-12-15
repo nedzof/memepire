@@ -1,7 +1,33 @@
 import { ErrorHandler } from './ErrorHandler.js';
 
 export class ComponentLoader {
+    static showLoadingState(id) {
+        const container = document.getElementById(id);
+        if (container) {
+            container.innerHTML = `
+                <div class="loading-state animate-pulse space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div class="h-8 w-32 bg-white/5 rounded-lg"></div>
+                        <div class="h-8 w-24 bg-white/5 rounded-lg"></div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        ${Array(6).fill().map(() => `
+                            <div class="rounded-xl overflow-hidden bg-white/5 backdrop-blur-sm">
+                                <div class="aspect-video bg-white/5"></div>
+                                <div class="p-4 space-y-3">
+                                    <div class="h-4 w-3/4 bg-white/5 rounded"></div>
+                                    <div class="h-4 w-1/2 bg-white/5 rounded"></div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+    }
+
     static async loadComponent(id, path) {
+        this.showLoadingState(id);
         try {
             console.log(`Loading component: ${id} from ${path}`);
             const response = await fetch(path);

@@ -1,13 +1,19 @@
-<header>
-    <div class="fixed top-4 right-4 z-50">
-        <button id="connectWalletBtn" class="gradient-button px-6 py-2 rounded-lg font-bold">
-            Connect Wallet
-        </button>
-    </div>
+<header class="fixed top-0 left-0 right-0 z-50 bg-black/30 backdrop-blur-lg border-b border-white/5">
+    <div class="container mx-auto px-4">
+        <div class="flex items-center justify-between h-16">
+            <!-- Logo/Brand -->
+            <div class="text-white font-bold text-xl">
+                Logo
+            </div>
 
-    <div class="text-center mb-8">
-        <button class="shift-blocks gradient-button px-6 py-2 rounded-lg font-bold">
-            Shift Blocks
-        </button>
+            <!-- Wallet Button -->
+            <button id="walletButton" class="wallet-button group">
+                <svg class="wallet-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                <span class="wallet-text">Connect Wallet</span>
+            </button>
+        </div>
     </div>
 </header> 

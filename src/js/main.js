@@ -15,10 +15,8 @@ function initializeApp() {
         return;
     }
 
-    // Initialize submissions immediately
-    initializeSubmissions();
-    // Set up the refresh interval for submissions
-    setInterval(initializeSubmissions, 60000);
+    // Initialize submissions
+    setupSubmissionsRefresh();
 
     // Wait for components to be loaded before initializing other features
     document.addEventListener('componentsLoaded', () => {
@@ -40,33 +38,30 @@ function initializeApp() {
 
 function setupEventListeners() {
     // Add shift blocks button listener
-    const shiftButton = document.querySelector('.shift-blocks');
-    if (shiftButton) {
-        shiftButton.addEventListener('click', shiftBlocks);
-    }
-
-    // Use event delegation for modal interactions
     document.addEventListener('click', (e) => {
-        // Handle submission details modal close button
-        if (e.target.closest('#closeSubmissionModal')) {
-            const submissionModal = document.getElementById('submissionDetailsModal');
-            if (submissionModal) {
-                // Force all display properties
-                submissionModal.style.display = 'none';
-                submissionModal.classList.add('hidden');
-                submissionModal.classList.remove('flex');
-                submissionModal.style.opacity = '0';
-                submissionModal.style.visibility = 'hidden';
-            }
+        // Handle Shift Blocks button
+        if (e.target.closest('.shift-blocks')) {
+            console.log('Shifting blocks...');
+            shiftBlocks();
         }
 
-        // Handle "Beat This" button
-        if (e.target.closest('.beat-button')) {
-            const videoModal = document.getElementById('videoModal');
-            if (videoModal) {
-                videoModal.style.display = 'flex';
-                videoModal.classList.remove('hidden');
-            }
+        // Handle submission details modal close button
+        if (e.target.closest('#closeSubmissionModal')) {
+            closeSubmissionModal();
+        }
+
+        // Handle submission item clicks
+        if (e.target.closest('.submission-item')) {
+            const submissionItem = e.target.closest('.submission-item');
+            const submission = {
+                block: submissionItem.dataset.block,
+                rank: submissionItem.dataset.rank,
+                watchTime: submissionItem.dataset.watchTime,
+                viewers: submissionItem.dataset.viewers,
+                txId: submissionItem.dataset.txId,
+                videoUrl: submissionItem.dataset.videoUrl
+            };
+            openSubmissionModal(submission);
         }
 
         // Handle video modal close button
@@ -86,40 +81,13 @@ function setupEventListeners() {
             }
         }
 
-        // Handle generate video button
-        if (e.target.closest('#generateVideo')) {
-            document.getElementById('promptStep').style.display = 'none';
-            document.getElementById('generatingStep').style.display = 'block';
-            
-            // Simulate video generation
-            setTimeout(() => {
-                document.getElementById('generatingStep').style.display = 'none';
-                document.getElementById('previewStep').style.display = 'block';
-            }, 3000);
-        }
-
-        // Handle start over button
-        if (e.target.closest('#startOver')) {
-            document.getElementById('previewStep').style.display = 'none';
-            document.getElementById('promptStep').style.display = 'block';
-            document.getElementById('promptText').value = '';
-        }
-
-        // Handle sign and broadcast button
-        if (e.target.closest('#signBroadcast')) {
+        // Handle "Beat This" button
+        if (e.target.closest('.beat-button')) {
             const videoModal = document.getElementById('videoModal');
-            if (!window.wallet?.isInitialized) {
-                videoModal.classList.add('hidden');
-                document.getElementById('initialSetupModal').classList.remove('hidden');
-                document.getElementById('initialSetupModal').style.display = 'flex';
-                return;
+            if (videoModal) {
+                videoModal.style.display = 'flex';
+                videoModal.classList.remove('hidden');
             }
-            // Handle signing and broadcasting
-            videoModal.classList.add('modal-close');
-            setTimeout(() => {
-                videoModal.classList.remove('modal-open', 'modal-close');
-                videoModal.classList.add('hidden');
-            }, 300);
         }
     });
 }
@@ -156,33 +124,49 @@ function formatTimeAgo(timestamp) {
     return 'Just now';
 }
 
-function openSubmissionModal(submissionData) {
+function openSubmissionModal(submission) {
     const modal = document.getElementById('submissionDetailsModal');
-    
-    // Update modal content with submission data
-    document.getElementById('submissionBlockNumber').textContent = `#${submissionData.blockNumber}`;
-    document.getElementById('submissionVideo').src = submissionData.videoUrl;
-    document.getElementById('submissionVideo').poster = submissionData.thumbnail;
-    
-    document.getElementById('submissionTimestamp').textContent = formatTimeAgo(submissionData.timestamp);
-    document.getElementById('creatorAddress').textContent = submissionData.creator;
-    document.getElementById('creatorRank').textContent = `Top Creator #${submissionData.creatorRank}`;
-    
-    document.getElementById('totalWatchTime').textContent = (submissionData.totalWatchTimeSeconds / 3600).toFixed(1);
-    document.getElementById('totalViews').textContent = formatNumber(submissionData.totalViews);
-    document.getElementById('submissionRank').textContent = `#${submissionData.rank}`;
-    document.getElementById('liveViewers').textContent = formatNumber(submissionData.liveViewers);
-    
-    document.getElementById('avgWatchTime').textContent = `${Math.round(submissionData.avgWatchTimeSeconds)}s`;
-    document.getElementById('peakViewers').textContent = formatNumber(submissionData.peakViewers);
-    document.getElementById('retentionRate').textContent = `${Math.round(submissionData.retentionRate * 100)}%`;
+    if (!modal) {
+        console.error('Submission modal not found');
+        return;
+    }
 
-    // Show modal with animation
-    modal.classList.remove('hidden');
-    modal.classList.add('modal-open');
+    // Get all required elements
+    const elements = {
+        block: document.getElementById('submissionBlock'),
+        rank: document.getElementById('submissionRank'),
+        watchTime: document.getElementById('submissionWatchTime'),
+        viewers: document.getElementById('submissionViewers'),
+        txId: document.getElementById('submissionTxId'),
+        video: document.getElementById('submissionVideo')
+    };
 
-    // Start live viewer count updates
-    startLiveViewerUpdates(submissionData.liveViewers);
+    // Check if all elements exist
+    for (const [key, element] of Object.entries(elements)) {
+        if (!element) {
+            console.error(`Element ${key} not found in submission modal`);
+            return;
+        }
+    }
+
+    // Update modal content
+    try {
+        elements.block.textContent = submission.block || '0';
+        elements.rank.textContent = `#${submission.rank || '0'}`;
+        elements.watchTime.textContent = submission.watchTime || '0';
+        elements.viewers.textContent = submission.viewers || '0';
+        elements.txId.textContent = submission.txId || '0x0000...0000';
+        
+        if (elements.video && submission.videoUrl) {
+            elements.video.src = submission.videoUrl;
+        }
+
+        // Show the modal
+        modal.style.display = 'flex';
+        modal.classList.remove('hidden');
+    } catch (error) {
+        console.error('Error updating submission modal:', error);
+    }
 }
 
 function closeSubmissionModal() {
@@ -218,113 +202,133 @@ function startLiveViewerUpdates(baseCount) {
     }, 3000);
 }
 
-function initializeSubmissions() {
-    console.log('Initializing submissions...');
-    const submissionsGrid = document.getElementById('submissionsGrid');
-    if (!submissionsGrid) {
-        console.log('Submissions grid not found, waiting for component...');
-        return;
-    }
+function createSubmissionElement(submission) {
+    const div = document.createElement('div');
+    div.className = 'submission-item relative group cursor-pointer';
+    div.dataset.block = submission.block;
+    div.dataset.rank = submission.rank;
+    div.dataset.watchTime = submission.watchTime;
+    div.dataset.viewers = submission.viewers;
+    div.dataset.txId = submission.txId;
+    div.dataset.videoUrl = submission.videoUrl;
 
-    submissionsGrid.innerHTML = '';
-    
-    // Create 12 submissions (2 rows of 6)
-    for (let i = 0; i < 12; i++) {
-        const watchTime = (Math.random() * 10).toFixed(1);
-        const currentViewers = Math.floor(Math.random() * 100);
-        const block = document.createElement('div');
-        block.className = 'submission-block';
-        block.style.animationDelay = `${i * 0.1}s`;
-
-        // Generate a random hue for the thumbnail gradient
-        const hue = Math.floor(Math.random() * 360);
-        
-        // Create mock submission data
-        const mockData = {
-            blockNumber: 803525 - i,
-            videoUrl: 'https://placehold.co/400x400',
-            thumbnail: `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'%3E%3Crect width='400' height='400' fill='%23000' fill-opacity='0.2'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='24' fill='rgba(0, 255, 163, 0.5)' text-anchor='middle' dominant-baseline='middle'%3EVideo %23${i + 1}%3C/text%3E%3C/svg%3E`,
-            timestamp: new Date(Date.now() - Math.random() * 86400000 * 7), // Random time in the last week
-            creator: `Creator${i + 1}.sol`,
-            creatorRank: Math.floor(Math.random() * 100) + 1,
-            totalWatchTimeSeconds: Math.floor(Math.random() * 36000), // Up to 10 hours
-            totalViews: Math.floor(Math.random() * 10000),
-            rank: i + 1,
-            liveViewers: currentViewers,
-            avgWatchTimeSeconds: Math.floor(Math.random() * 300), // Up to 5 minutes
-            peakViewers: Math.floor(Math.random() * 2000),
-            retentionRate: Math.random() * 0.3 + 0.7 // 70-100%
-        };
-        
-        block.innerHTML = `
-            <div class="thumbnail" style="background: linear-gradient(135deg, 
-                hsla(${hue}, 100%, 50%, 0.1), 
-                hsla(${hue + 30}, 100%, 50%, 0.05)
-            )">
-                <video src="${mockData.videoUrl}" class="w-full h-full object-cover" preload="none" poster="${mockData.thumbnail}"></video>
-                <div class="watch-banner">
-                    <div class="watch-count">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path>
-                            <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"></path>
-                        </svg>
-                        <span class="watching-now">${currentViewers}</span> watching
-                    </div>
-                </div>
-                <div class="play-indicator">
-                    <svg class="w-8 h-8" fill="none" stroke="rgba(0, 255, 163, 0.8)" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    div.innerHTML = `
+        <div class="submission-card">
+            <div class="submission-thumbnail">
+                <div class="play-icon">
+                    <svg class="w-12 h-12 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                 </div>
-                <div class="submission-info">
-                    <div class="flex justify-between items-center">
-                        <div class="flex items-center gap-2">
-                            <div class="rank-badge">#${i + 1}</div>
-                            <div class="text-sm text-gray-400">Block #${mockData.blockNumber}</div>
-                        </div>
-                        <div class="watch-time">${watchTime}s</div>
-                    </div>
+            </div>
+            <div class="submission-info">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="block-number">Block #${submission.block}</span>
+                    <span class="rank-badge">#${submission.rank}</span>
+                </div>
+                <div class="flex items-center gap-3 text-sm text-white/70">
+                    <span class="flex items-center gap-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        ${submission.watchTime}s
+                    </span>
+                    <span class="flex items-center gap-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        ${submission.viewers}
+                    </span>
                 </div>
             </div>
-        `;
+        </div>
+    `;
 
-        // Add click handler to open modal
-        block.addEventListener('click', () => openSubmissionModal(mockData));
+    return div;
+}
 
-        // Add hover effects
-        block.addEventListener('mouseenter', () => {
-            const info = block.querySelector('.submission-info');
-            if (info) {
-                info.style.opacity = '1';
-                info.style.transform = 'translateY(0)';
-            }
-        });
+function initializeSubmissions() {
+    const submissionsGrid = document.getElementById('submissionsGrid');
+    if (!submissionsGrid) return;
 
-        block.addEventListener('mouseleave', () => {
-            const info = block.querySelector('.submission-info');
-            if (info) {
-                info.style.opacity = '0';
-                info.style.transform = 'translateY(10px)';
-            }
-        });
+    // Ensure proper grid class
+    submissionsGrid.className = 'submissions-grid';
+    
+    // Clear existing submissions
+    submissionsGrid.innerHTML = '';
 
-        // Simulate real-time viewer count updates
-        setInterval(() => {
-            const watchingNow = block.querySelector('.watching-now');
-            if (watchingNow) {
-                const currentCount = parseInt(watchingNow.textContent);
-                const delta = Math.floor(Math.random() * 3) - 1; // -1, 0, or 1
-                watchingNow.textContent = Math.max(0, currentCount + delta);
-                mockData.liveViewers = Math.max(0, currentCount + delta);
-            }
-        }, 2000 + Math.random() * 2000);
+    // Mock data for submissions (temporary data for testing)
+    const submissions = [
+        {
+            block: '803525',
+            rank: '1',
+            watchTime: '120',
+            viewers: '1.5k',
+            txId: '0x1234...5678',
+            videoUrl: 'https://example.com/video1.mp4'
+        },
+        {
+            block: '803524',
+            rank: '2',
+            watchTime: '90',
+            viewers: '1.2k',
+            txId: '0x5678...9012',
+            videoUrl: 'https://example.com/video2.mp4'
+        },
+        {
+            block: '803523',
+            rank: '3',
+            watchTime: '60',
+            viewers: '900',
+            txId: '0x9012...3456',
+            videoUrl: 'https://example.com/video3.mp4'
+        },
+        {
+            block: '803522',
+            rank: '4',
+            watchTime: '45',
+            viewers: '800',
+            txId: '0x3456...7890',
+            videoUrl: 'https://example.com/video4.mp4'
+        },
+        {
+            block: '803521',
+            rank: '5',
+            watchTime: '30',
+            viewers: '700',
+            txId: '0x7890...1234',
+            videoUrl: 'https://example.com/video5.mp4'
+        },
+        {
+            block: '803520',
+            rank: '6',
+            watchTime: '25',
+            viewers: '600',
+            txId: '0x1234...5678',
+            videoUrl: 'https://example.com/video6.mp4'
+        }
+    ];
 
-        submissionsGrid.appendChild(block);
-    }
+    // Create and append submission items
+    submissions.forEach(submission => {
+        const submissionElement = createSubmissionElement(submission);
+        submissionsGrid.appendChild(submissionElement);
+    });
+}
 
-    // Add modal close handler
-    document.getElementById('closeSubmissionModal')?.addEventListener('click', closeSubmissionModal);
+function setupSubmissionsRefresh() {
+    // Initial load
+    initializeSubmissions();
+    
+    // Refresh every 5 minutes
+    setInterval(initializeSubmissions, 300000);
 }
 
 // Add a specific event listener for when the main content is loaded
@@ -368,4 +372,26 @@ document.addEventListener('DOMContentLoaded', () => {
 document.addEventListener('walletsLoaded', () => {
     console.log('Wallets Loaded Event Received');
     initializeWalletFunctionality();
-}); 
+});
+
+function updateWalletButton(isConnected, address = '', balance = '') {
+    const walletButton = document.getElementById('walletButton');
+    const walletText = walletButton.querySelector('.wallet-text');
+    
+    if (isConnected) {
+        walletButton.classList.add('connected');
+        const shortAddress = `${address.slice(0, 6)}...${address.slice(-4)}`;
+        walletText.innerHTML = `
+            <span class="balance-display">${balance}</span>
+            <span class="address-display">${shortAddress}</span>
+        `;
+    } else {
+        walletButton.classList.remove('connected');
+        walletText.textContent = 'Connect Wallet';
+    }
+}
+
+// Call this when wallet state changes
+function onWalletStateChange(isConnected, address, balance) {
+    updateWalletButton(isConnected, address, balance);
+} 

@@ -288,13 +288,73 @@ body {
 /* Submissions Grid */
 .submissions-grid {
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    grid-template-rows: repeat(2, 300px);
-    gap: 24px;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+    padding: 1.5rem;
+    width: 100%;
+}
+
+/* Submission Item */
+.submission-item {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 1rem;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.submission-item:hover {
+    transform: translateY(-4px);
+    background: rgba(255, 255, 255, 0.05);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* Submission Card */
+.submission-card {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Submission Thumbnail */
+.submission-thumbnail {
+    aspect-ratio: 16/9;
+    background: linear-gradient(45deg, rgba(255, 0, 255, 0.1), rgba(0, 255, 255, 0.1));
+    position: relative;
+    display: flex;
+    align-items: center;
     justify-content: center;
-    padding: 20px;
-    margin: 0 auto;
-    max-width: 1600px;
+}
+
+.play-icon {
+    opacity: 0.7;
+    transition: all 0.3s ease;
+}
+
+.submission-item:hover .play-icon {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+/* Submission Info */
+.submission-info {
+    padding: 1rem;
+}
+
+/* Block Number */
+.block-number {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* Rank Badge */
+.rank-badge {
+    background: rgba(0, 255, 163, 0.1);
+    color: #00ffa3;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
 }
 
 .submission-block {
@@ -1257,5 +1317,265 @@ textarea:focus {
 .error-container button:hover {
     transform: translateY(-1px);
     box-shadow: 0 2px 10px rgba(239, 68, 68, 0.2);
+}
+
+/* Modern Loading Effects */
+.loading-state {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* Modern Glass Effects */
+.glass-effect {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Smooth Transitions */
+.transition-all {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Modern Card Hover Effects */
+.card-hover {
+    transform: translateY(0);
+    transition: all 0.3s ease;
+}
+
+.card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+/* Modern Button Styles */
+.modern-button {
+    background: linear-gradient(45deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.1));
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.modern-button:hover {
+    background: linear-gradient(45deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.15));
+    transform: translateY(-1px);
+}
+
+/* Modern Modal Base */
+.modal-base {
+    animation: modalFadeIn 0.3s ease-out;
+    backdrop-filter: blur(20px);
+}
+
+/* Modal Animations */
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes modalFadeOut {
+    from {
+        opacity: 1;
+        transform: scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+}
+
+/* Modal Content */
+.modal-content {
+    background: linear-gradient(
+        135deg,
+        rgba(18, 12, 52, 0.95) 0%,
+        rgba(26, 17, 71, 0.95) 100%
+    );
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 
+        0 0 40px rgba(0, 0, 0, 0.3),
+        inset 0 0 20px rgba(255, 255, 255, 0.05);
+}
+
+/* Modal Header */
+.modal-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Modal Close Button */
+.modal-close-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.modal-close-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: rotate(90deg);
+}
+
+/* Modal Input Fields */
+.modal-input {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.modal-input:focus {
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.05);
+}
+
+/* Modal Buttons */
+.modal-button {
+    background: linear-gradient(45deg, rgba(255, 0, 255, 0.05), rgba(0, 255, 255, 0.05));
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.modal-button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    background: linear-gradient(45deg, rgba(255, 0, 255, 0.15), rgba(0, 255, 255, 0.15));
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.modal-button:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+/* Add these wallet-related styles to your existing CSS */
+
+/* Wallet Button */
+.wallet-button {
+    background: linear-gradient(
+        45deg,
+        rgba(255, 0, 255, 0.1),
+        rgba(0, 255, 255, 0.1)
+    );
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    padding: 0.75rem 1.5rem;
+    border-radius: 9999px;
+    color: white;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.wallet-button:hover {
+    transform: translateY(-1px);
+    background: linear-gradient(
+        45deg,
+        rgba(255, 0, 255, 0.15),
+        rgba(0, 255, 255, 0.15)
+    );
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Connected State */
+.wallet-button.connected {
+    background: linear-gradient(
+        45deg,
+        rgba(0, 255, 163, 0.1),
+        rgba(0, 255, 255, 0.1)
+    );
+    border-color: rgba(0, 255, 163, 0.2);
+}
+
+.wallet-button.connected:hover {
+    background: linear-gradient(
+        45deg,
+        rgba(0, 255, 163, 0.15),
+        rgba(0, 255, 255, 0.15)
+    );
+}
+
+/* Wallet Icon */
+.wallet-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    opacity: 0.8;
+}
+
+/* Balance Display */
+.balance-display {
+    font-family: 'Courier New', monospace;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* Address Display */
+.address-display {
+    font-family: 'Courier New', monospace;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* Modal Base Styles */
+.modal-base {
+    transition: all 0.3s ease;
+}
+
+.modal-content {
+    background: linear-gradient(to bottom right, rgba(255, 0, 255, 0.05), rgba(0, 255, 255, 0.05));
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    transform: translateY(0);
+    transition: all 0.3s ease;
+}
+
+.modal-close-btn {
+    transition: all 0.2s ease;
+}
+
+.modal-close-btn:hover {
+    transform: rotate(90deg);
+}
+
+.modal-button {
+    background: linear-gradient(45deg, rgba(255, 0, 255, 0.1), rgba(0, 255, 255, 0.1));
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.3s ease;
+}
+
+.modal-button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    background: linear-gradient(45deg, rgba(255, 0, 255, 0.15), rgba(0, 255, 255, 0.15));
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.modal-button:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.modal-input {
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.3s ease;
+}
+
+.modal-input:hover {
+    border-color: rgba(255, 255, 255, 0.1);
 }
   

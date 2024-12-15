@@ -1,5 +1,14 @@
 import bsv from './bsv.js';
 
+// Add error handling utility
+function showError(message) {
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'fixed top-4 right-4 bg-red-500/90 text-white px-4 py-2 rounded-lg z-50';
+    errorDiv.textContent = message;
+    document.body.appendChild(errorDiv);
+    setTimeout(() => errorDiv.remove(), 3000);
+}
+
 export function initializeWallet() {
     console.log('Starting wallet initialization...');
     
@@ -9,9 +18,9 @@ export function initializeWallet() {
         return;
     }
 
-    const connectBtn = document.getElementById('connectWalletBtn');
-    if (!connectBtn) {
-        console.error('Connect wallet button not found');
+    const walletButton = document.getElementById('walletButton');
+    if (!walletButton) {
+        console.error('Wallet button not found');
         return;
     }
 
@@ -40,12 +49,16 @@ export function initializeWallet() {
         }
     });
 
-    // Connect wallet button
-    console.log('Setting up connect wallet button...');
-    connectBtn.addEventListener('click', () => {
-        console.log('Connect wallet button clicked');
-        initialSetupModal.classList.remove('hidden');
-        initialSetupModal.style.display = 'flex';
+    // Wallet button click handler
+    walletButton.addEventListener('click', () => {
+        console.log('Wallet button clicked');
+        if (!wallet.isInitialized) {
+            initialSetupModal.classList.remove('hidden');
+            initialSetupModal.style.display = 'flex';
+        } else {
+            mainWalletModal.classList.remove('hidden');
+            mainWalletModal.style.display = 'flex';
+        }
     });
 
     // Close buttons
@@ -217,22 +230,44 @@ export function initializeWallet() {
     });
 
     document.getElementById('receiveBtn').addEventListener('click', () => {
-        mainWalletModal.classList.add('hidden');
-        receiveModal.classList.remove('hidden');
-        receiveModal.style.display = 'flex';
-        
-        const qrCode = document.getElementById('qrCode');
-        qrCode.innerHTML = '';
-        new QRCode(qrCode, {
-            text: wallet.getAddress(),
-            width: 128,
-            height: 128,
-            colorDark: '#ffffff',
-            colorLight: '#000000',
-            correctLevel: QRCode.CorrectLevel.H
-        });
-        
-        document.getElementById('walletAddress').value = wallet.getAddress();
+        const wallet = window.wallet;
+        if (!wallet) {
+            console.error('Wallet not found');
+            showError('Wallet not initialized');
+            return;
+        }
+
+        try {
+            mainWalletModal.classList.add('hidden');
+            mainWalletModal.style.display = 'none';
+            receiveModal.classList.remove('hidden');
+            receiveModal.style.display = 'flex';
+            
+            const address = wallet.getAddress();
+            
+            // Update QR Code
+            const qrCode = document.getElementById('qrCode');
+            if (qrCode) {
+                qrCode.innerHTML = ''; // Clear existing QR code
+                new QRCode(qrCode, {
+                    text: address,
+                    width: 180,
+                    height: 180,
+                    colorDark: '#ffffff',
+                    colorLight: '#000000',
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+            }
+            
+            // Update address display
+            const walletAddressElement = document.getElementById('walletAddress');
+            if (walletAddressElement) {
+                walletAddressElement.textContent = address;
+            }
+        } catch (error) {
+            console.error('Error showing receive modal:', error);
+            showError('Failed to display wallet address');
+        }
     });
 
     // Send functionality
@@ -312,16 +347,34 @@ export function initializeWallet() {
 
     // Copy address functionality
     document.getElementById('copyAddress').addEventListener('click', () => {
-        const address = document.getElementById('walletAddress');
-        address.select();
-        document.execCommand('copy');
-        
-        const copyBtn = document.getElementById('copyAddress');
-        const originalText = copyBtn.textContent;
-        copyBtn.textContent = 'Copied!';
-        setTimeout(() => {
-            copyBtn.textContent = originalText;
-        }, 2000);
+        const walletAddressElement = document.getElementById('walletAddress');
+        if (!walletAddressElement) {
+            console.error('Wallet address element not found');
+            return;
+        }
+
+        try {
+            navigator.clipboard.writeText(walletAddressElement.textContent).then(() => {
+                const copyBtn = document.getElementById('copyAddress');
+                const originalContent = copyBtn.innerHTML;
+                
+                copyBtn.innerHTML = `
+                    <svg class="w-5 h-5 text-[#00ffa3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                `;
+                
+                setTimeout(() => {
+                    copyBtn.innerHTML = originalContent;
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy address:', err);
+                showError('Failed to copy address');
+            });
+        } catch (error) {
+            console.error('Error copying address:', error);
+            showError('Failed to copy address');
+        }
     });
 
     // Disconnect wallet
@@ -331,13 +384,55 @@ export function initializeWallet() {
         connectBtn.textContent = 'Connect Wallet';
     });
 
-    function showMainWallet() {
-        console.log('Showing main wallet UI');
-        if (!wallet.isInitialized) {
-            console.error('Wallet is not initialized');
+    function updateWalletUI() {
+        const wallet = window.wallet;
+        if (!wallet) {
+            console.error('Wallet not found');
             return;
         }
+
+        const walletButton = document.getElementById('walletButton');
+        if (!walletButton) {
+            console.error('Wallet button not found');
+            return;
+        }
+
+        const walletText = walletButton.querySelector('.wallet-text');
+        if (!walletText) {
+            console.error('Wallet text element not found');
+            return;
+        }
+
+        try {
+            if (wallet.isInitialized) {
+                walletButton.classList.add('connected');
+                const address = wallet.getAddress();
+                const balance = wallet.getBalance();
+                const shortAddress = `${address.slice(0, 6)}...${address.slice(-4)}`;
+                walletText.innerHTML = `
+                    <span class="balance-display">${balance.toFixed(8)}</span>
+                    <span class="address-display">${shortAddress}</span>
+                `;
+            } else {
+                walletButton.classList.remove('connected');
+                walletText.textContent = 'Connect Wallet';
+            }
+        } catch (error) {
+            console.error('Error updating wallet UI:', error);
+            showError('Failed to update wallet display');
+        }
+    }
+
+    function showMainWallet() {
+        console.log('Showing main wallet UI');
+        const wallet = window.wallet;
         
+        if (!wallet) {
+            console.error('Wallet not found');
+            showError('Wallet not initialized');
+            return;
+        }
+
         try {
             console.log('Wallet state:', {
                 initialized: wallet.isInitialized,
@@ -346,119 +441,36 @@ export function initializeWallet() {
             });
             
             // Make sure all other modals are hidden
-            [initialSetupModal, seedPhraseModal, passwordSetupModal, sendModal, receiveModal].forEach(modal => {
-                modal.classList.add('hidden');
-                modal.style.display = 'none';
+            const modalsToHide = [
+                'initialSetupModal',
+                'seedPhraseModal',
+                'passwordSetupModal',
+                'sendModal',
+                'receiveModal'
+            ];
+            
+            modalsToHide.forEach(modalId => {
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    modal.classList.add('hidden');
+                    modal.style.display = 'none';
+                }
             });
             
             // Update UI elements
             updateWalletUI();
             
             // Show main wallet modal
-            mainWalletModal.classList.remove('hidden');
-            mainWalletModal.style.display = 'flex';
-            
-            // Update connect button
-            connectBtn.textContent = 'Connected';
-            connectBtn.classList.add('connected');
+            const mainWalletModal = document.getElementById('mainWalletModal');
+            if (mainWalletModal) {
+                mainWalletModal.classList.remove('hidden');
+                mainWalletModal.style.display = 'flex';
+            }
             
         } catch (error) {
             console.error('Error showing main wallet:', error);
-            // Show error to user
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg';
-            errorDiv.textContent = `Error: ${error.message}`;
-            document.body.appendChild(errorDiv);
-            setTimeout(() => errorDiv.remove(), 3000);
+            showError('Failed to show wallet interface');
         }
-    }
-
-    function updateWalletUI() {
-        // Update balance
-        document.getElementById('walletBalance').textContent = wallet.getBalance().toFixed(8);
-
-        // Update transaction list
-        const transactionList = document.getElementById('transactionList');
-        transactionList.innerHTML = '';
-        
-        wallet.getTransactions().forEach((tx, index) => {
-            const txElement = document.createElement('div');
-            txElement.className = 'transaction-item p-4 rounded-xl';
-            
-            const timeAgo = getTimeAgo(new Date(tx.timestamp));
-            
-            txElement.innerHTML = `
-                <div class="flex justify-between items-center">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-lg flex items-center justify-center ${tx.type === 'send' ? 'bg-red-500/20' : 'bg-green-500/20'}">
-                            <svg class="w-4 h-4 ${tx.type === 'send' ? 'text-red-400' : 'text-green-400'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                    d="${tx.type === 'send' 
-                                        ? 'M5 10l7-7m0 0l7 7m-7-7v18' 
-                                        : 'M19 14l-7 7m0 0l-7-7m7 7V3'}">
-                                </path>
-                            </svg>
-                        </div>
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <div class="font-medium text-white">
-                                    ${tx.type === 'send' ? 'Sent BSV' : 'Received BSV'}
-                                </div>
-                                <a href="https://whatsonchain.com/tx/${tx.txid}" 
-                                   target="_blank" 
-                                   class="text-[#00ffa3] hover:text-[#00ffa3]/80 transition-colors">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                                    </svg>
-                                </a>
-                            </div>
-                            <div class="text-sm text-gray-400">
-                                ${tx.type === 'send' ? 'To: ' : 'From: '}
-                                <span class="text-[#00ffa3]">${tx.type === 'send' ? tx.to : tx.from}</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="text-right">
-                        <div class="font-medium ${tx.type === 'send' ? 'text-red-400' : 'text-green-400'}">
-                            ${tx.type === 'send' ? '-' : '+'}${tx.amount} BSV
-                        </div>
-                        <div class="text-sm text-gray-400">
-                            ${timeAgo}
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            transactionList.appendChild(txElement);
-        });
-    }
-
-    function getTimeAgo(date) {
-        const seconds = Math.floor((new Date() - date) / 1000);
-        
-        let interval = Math.floor(seconds / 31536000);
-        if (interval > 1) return interval + ' years ago';
-        if (interval === 1) return 'a year ago';
-        
-        interval = Math.floor(seconds / 2592000);
-        if (interval > 1) return interval + ' months ago';
-        if (interval === 1) return 'a month ago';
-        
-        interval = Math.floor(seconds / 86400);
-        if (interval > 1) return interval + ' days ago';
-        if (interval === 1) return 'a day ago';
-        
-        interval = Math.floor(seconds / 3600);
-        if (interval > 1) return interval + ' hours ago';
-        if (interval === 1) return 'an hour ago';
-        
-        interval = Math.floor(seconds / 60);
-        if (interval > 1) return interval + ' minutes ago';
-        if (interval === 1) return 'a minute ago';
-        
-        if (seconds < 10) return 'just now';
-        
-        return Math.floor(seconds) + ' seconds ago';
     }
 
     // Import wallet functionality
@@ -588,4 +600,26 @@ export function initializeWallet() {
             setTimeout(() => errorDiv.remove(), 3000);
         }
     });
+
+    function initializeWalletUI() {
+        const walletButton = document.getElementById('walletButton');
+        if (!walletButton) {
+            console.error('Wallet button not found');
+            return;
+        }
+
+        walletButton.addEventListener('click', () => {
+            if (!window.wallet?.isInitialized) {
+                showInitialSetupModal();
+            } else {
+                // Handle connected wallet click
+                // Add your wallet menu logic here
+            }
+        });
+    }
+
+    // Make sure wallet is properly initialized before showing UI
+    if (window.wallet && window.wallet.isInitialized) {
+        updateWalletUI();
+    }
 } 
