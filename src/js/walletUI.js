@@ -1,13 +1,5 @@
 import bsv from './bsv.js';
-
-// Add error handling utility
-function showError(message) {
-    const errorDiv = document.createElement('div');
-    errorDiv.className = 'fixed top-4 right-4 bg-red-500/90 text-white px-4 py-2 rounded-lg z-50';
-    errorDiv.textContent = message;
-    document.body.appendChild(errorDiv);
-    setTimeout(() => errorDiv.remove(), 3000);
-}
+import { showError, showSuccess } from './utils/notifications.js';
 
 export function initializeWallet() {
     console.log('Starting wallet initialization...');
@@ -61,13 +53,19 @@ export function initializeWallet() {
         }
     });
 
-    // Close buttons
+    // Update close buttons behavior
     document.querySelectorAll('[id$="Modal"]').forEach(modal => {
         const closeBtn = modal.querySelector('button[id^="close"]');
         if (closeBtn) {
             closeBtn.addEventListener('click', () => {
                 modal.classList.add('hidden');
                 modal.style.display = 'none';
+                
+                // If closing receive or send modal, show main wallet modal
+                if (modal.id === 'receiveModal' || modal.id === 'sendModal') {
+                    mainWalletModal.classList.remove('hidden');
+                    mainWalletModal.style.display = 'flex';
+                }
             });
         }
     });
