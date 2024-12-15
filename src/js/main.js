@@ -15,20 +15,27 @@ function initializeApp() {
         return;
     }
 
-    // Initialize blocks
-    console.log('Initializing blocks...');
-    initializeBlocks();
-    centerBlocks();
+    // Initialize submissions immediately
+    initializeSubmissions();
+    // Set up the refresh interval for submissions
+    setInterval(initializeSubmissions, 60000);
 
-    // Initialize wallet
-    console.log('Creating wallet instance...');
-    window.wallet = new Wallet();
-    console.log('Initializing wallet UI...');
-    initializeWallet();
+    // Wait for components to be loaded before initializing other features
+    document.addEventListener('componentsLoaded', () => {
+        console.log('Components loaded, initializing blocks...');
+        initializeBlocks();
+        centerBlocks();
 
-    // Add event listeners
-    console.log('Setting up event listeners...');
-    setupEventListeners();
+        // Initialize wallet
+        console.log('Creating wallet instance...');
+        window.wallet = new Wallet();
+        console.log('Initializing wallet UI...');
+        initializeWallet();
+
+        // Add event listeners
+        console.log('Setting up event listeners...');
+        setupEventListeners();
+    });
 }
 
 function setupEventListeners() {
@@ -38,36 +45,49 @@ function setupEventListeners() {
         shiftButton.addEventListener('click', shiftBlocks);
     }
 
-    // Initialize video modal functionality
-    const videoModal = document.getElementById('videoModal');
-    const beatButton = document.querySelector('.beat-button');
-    const closeModal = document.getElementById('closeModal');
-    const generateVideo = document.getElementById('generateVideo');
-    const startOver = document.getElementById('startOver');
-    const signBroadcast = document.getElementById('signBroadcast');
+    // Use event delegation for modal interactions
+    document.addEventListener('click', (e) => {
+        // Handle submission details modal close button
+        if (e.target.closest('#closeSubmissionModal')) {
+            const submissionModal = document.getElementById('submissionDetailsModal');
+            if (submissionModal) {
+                // Force all display properties
+                submissionModal.style.display = 'none';
+                submissionModal.classList.add('hidden');
+                submissionModal.classList.remove('flex');
+                submissionModal.style.opacity = '0';
+                submissionModal.style.visibility = 'hidden';
+            }
+        }
 
-    if (beatButton) {
-        beatButton.addEventListener('click', () => {
-            videoModal.classList.remove('hidden');
-            videoModal.classList.add('modal-open');
-            document.getElementById('promptStep').style.display = 'block';
-            document.getElementById('generatingStep').style.display = 'none';
-            document.getElementById('previewStep').style.display = 'none';
-        });
-    }
+        // Handle "Beat This" button
+        if (e.target.closest('.beat-button')) {
+            const videoModal = document.getElementById('videoModal');
+            if (videoModal) {
+                videoModal.style.display = 'flex';
+                videoModal.classList.remove('hidden');
+            }
+        }
 
-    if (closeModal) {
-        closeModal.addEventListener('click', () => {
-            videoModal.classList.add('modal-close');
-            setTimeout(() => {
-                videoModal.classList.remove('modal-open', 'modal-close');
-                videoModal.classList.add('hidden');
-            }, 300);
-        });
-    }
+        // Handle video modal close button
+        if (e.target.closest('#closeModal')) {
+            const videoModal = document.getElementById('videoModal');
+            if (videoModal) {
+                videoModal.style.opacity = '0';
+                videoModal.style.transform = 'scale(0.95)';
+                videoModal.style.transition = 'all 0.2s ease-out';
+                
+                setTimeout(() => {
+                    videoModal.style.display = 'none';
+                    videoModal.classList.add('hidden');
+                    videoModal.style.opacity = '';
+                    videoModal.style.transform = '';
+                }, 200);
+            }
+        }
 
-    if (generateVideo) {
-        generateVideo.addEventListener('click', () => {
+        // Handle generate video button
+        if (e.target.closest('#generateVideo')) {
             document.getElementById('promptStep').style.display = 'none';
             document.getElementById('generatingStep').style.display = 'block';
             
@@ -76,19 +96,18 @@ function setupEventListeners() {
                 document.getElementById('generatingStep').style.display = 'none';
                 document.getElementById('previewStep').style.display = 'block';
             }, 3000);
-        });
-    }
+        }
 
-    if (startOver) {
-        startOver.addEventListener('click', () => {
+        // Handle start over button
+        if (e.target.closest('#startOver')) {
             document.getElementById('previewStep').style.display = 'none';
             document.getElementById('promptStep').style.display = 'block';
             document.getElementById('promptText').value = '';
-        });
-    }
+        }
 
-    if (signBroadcast) {
-        signBroadcast.addEventListener('click', () => {
+        // Handle sign and broadcast button
+        if (e.target.closest('#signBroadcast')) {
+            const videoModal = document.getElementById('videoModal');
             if (!window.wallet?.isInitialized) {
                 videoModal.classList.add('hidden');
                 document.getElementById('initialSetupModal').classList.remove('hidden');
@@ -101,16 +120,7 @@ function setupEventListeners() {
                 videoModal.classList.remove('modal-open', 'modal-close');
                 videoModal.classList.add('hidden');
             }, 300);
-        });
-    }
-
-    // Add resize listener
-    window.addEventListener('resize', () => {
-        clearTimeout(window.resizeTimer);
-        window.resizeTimer = setTimeout(() => {
-            initializeBlocks();
-            centerBlocks();
-        }, 250);
+        }
     });
 }
 
@@ -209,8 +219,12 @@ function startLiveViewerUpdates(baseCount) {
 }
 
 function initializeSubmissions() {
+    console.log('Initializing submissions...');
     const submissionsGrid = document.getElementById('submissionsGrid');
-    if (!submissionsGrid) return;
+    if (!submissionsGrid) {
+        console.log('Submissions grid not found, waiting for component...');
+        return;
+    }
 
     submissionsGrid.innerHTML = '';
     
@@ -313,10 +327,9 @@ function initializeSubmissions() {
     document.getElementById('closeSubmissionModal')?.addEventListener('click', closeSubmissionModal);
 }
 
-// Initialize submissions on page load and refresh every minute
-window.addEventListener('DOMContentLoaded', () => {
+// Add a specific event listener for when the main content is loaded
+document.addEventListener('mainContentLoaded', () => {
     initializeSubmissions();
-    setInterval(initializeSubmissions, 60000);
 });
 
 // Wait for DOM content to be loaded
@@ -348,7 +361,7 @@ function initializeWalletFunctionality() {
 // Initialize immediately for the connect button
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM Content Loaded');
-    initializeWalletFunctionality();
+    setupEventListeners();
 });
 
 // Re-initialize when wallet modals are loaded

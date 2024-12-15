@@ -20,28 +20,32 @@
     <div id="videoModalContainer"></div>
     <div id="submissionDetailsModalContainer"></div>
 
-    <script>
-        // Load all components
-        const components = [
-            { id: 'headerContainer', path: 'src/components/header.html' },
-            { id: 'mainContentContainer', path: 'src/components/main-content.html' },
-            { id: 'walletModalsContainer', path: 'src/components/wallet-modals.html' },
-            { id: 'videoModalContainer', path: 'src/components/video-modal.html' },
-            { id: 'submissionDetailsModalContainer', path: 'src/components/submission-details-modal.html' }
-        ];
+    <script type="module">
+        // Use absolute path from root
+        import { ComponentLoader } from '/src/js/utils/ComponentLoader.js';
 
-        Promise.all(components.map(component => 
-            fetch(component.path)
-                .then(response => response.text())
-                .then(html => {
-                    document.getElementById(component.id).innerHTML = html;
-                    if (component.id === 'walletModalsContainer') {
-                        // Dispatch walletsLoaded event after wallet modals are loaded
-                        document.dispatchEvent(new CustomEvent('walletsLoaded'));
+        // Wait for DOM to be ready
+        document.addEventListener('DOMContentLoaded', () => {
+            const components = [
+                { id: 'headerContainer', path: '/src/components/header.html' },
+                { id: 'mainContentContainer', path: '/src/components/main-content.html' },
+                { id: 'walletModalsContainer', path: '/src/components/wallet-modals.html' },
+                { id: 'videoModalContainer', path: '/src/components/video-modal.html' },
+                { id: 'submissionDetailsModalContainer', path: '/src/components/submission-details-modal.html' }
+            ];
+
+            ComponentLoader.loadAllComponents(components)
+                .then(success => {
+                    if (success) {
+                        console.log('All components loaded successfully');
+                    } else {
+                        console.error('Some components failed to load');
                     }
                 })
-                .catch(error => console.error(`Error loading ${component.path}:`, error))
-        ));
+                .catch(error => {
+                    console.error('Error loading components:', error);
+                });
+        });
     </script>
 </body>
 </html>
