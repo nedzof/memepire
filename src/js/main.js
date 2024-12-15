@@ -4,6 +4,8 @@ import { initializeWallet } from './walletUI.js';
 import bsv from './bsv.js';
 import { Wallet } from './bsv.js';
 
+console.log('Main.js loaded');
+
 function initializeApp() {
     console.log('Initializing app...');
     
@@ -322,4 +324,35 @@ if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initializeApp);
 } else {
     initializeApp();
-} 
+}
+
+function initializeWalletFunctionality() {
+    console.log('Initializing wallet functionality');
+    const connectWalletBtn = document.getElementById('connectWalletBtn');
+    if (connectWalletBtn) {
+        console.log('Found connect wallet button');
+        connectWalletBtn.addEventListener('click', () => {
+            console.log('Connect wallet clicked');
+            const initialSetupModal = document.getElementById('initialSetupModal');
+            if (initialSetupModal) {
+                initialSetupModal.style.display = 'flex';
+            } else {
+                console.error('Initial setup modal not found');
+            }
+        });
+    } else {
+        console.error('Connect wallet button not found');
+    }
+}
+
+// Initialize immediately for the connect button
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM Content Loaded');
+    initializeWalletFunctionality();
+});
+
+// Re-initialize when wallet modals are loaded
+document.addEventListener('walletsLoaded', () => {
+    console.log('Wallets Loaded Event Received');
+    initializeWalletFunctionality();
+}); 
